@@ -1,5 +1,5 @@
 <?php echo form_open('user/login'); ?>
-<section class="about about-six padding-120">
+<section class="padding-120">
     <div class="container">
         <div class="col-md-4 card p-3 bg-light col-md-offset-4">
 

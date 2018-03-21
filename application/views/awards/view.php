@@ -5,7 +5,7 @@
             <h2>View Nominees!</h2>
         </div>
         <?php foreach ($voteResult as $category => $value): ?>
-                <div class="row">
+                <div class="row" style="margin:15px">
                     <p><h4><?= $categories[$category];?></h4></p>
                     <?php foreach ($value as $key => $vote):?>
                         <div class="col-md-3">
