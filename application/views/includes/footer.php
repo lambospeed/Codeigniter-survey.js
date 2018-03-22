@@ -189,6 +189,10 @@
         }
         survey.render();
     });
+    // adding loading image
+    $(window).load(function() {
+        $(".loader").hide();
+    });
 
 
 </script>
