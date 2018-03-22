@@ -75,7 +75,6 @@ class Vote extends CI_Controller
                 $arrCat['isRequired'] = $category['required'] == 1? true : false;
                 $arrCat['choices'] = array();
                 $arrCat['colCount'] = 4;
-                $arrCat['hasOther'] = true;
                 foreach ($arrTemp[$category['id']] as $nominee) {
                     $arrNominee['value'] = $nominee['id'];
                     $arrNominee['text'] = $nominee['name'];
