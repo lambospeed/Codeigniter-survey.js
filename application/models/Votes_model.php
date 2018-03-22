@@ -11,7 +11,12 @@ class Votes_model extends MY_Model {
     }
 
     public function getAllCountByNominees() {
-        $query = $this->db->query('SELECT votes.*, COUNT(*) AS voteCount, award_categories.name AS category_name, nominees.name AS nominee_name FROM votes LEFT JOIN nominees ON nominees.id=votes.nominee_id LEFT JOIN award_categories ON votes.category_id=award_categories.id GROUP BY nominee_id;');
+        $query = $this->db->query('SELECT votes.*, COUNT(*) AS voteCount, award_categories.name AS category_name, nominees.name AS nominee_name 
+                                    FROM votes 
+                                    LEFT JOIN nominees ON nominees.id=votes.nominee_id 
+                                    LEFT JOIN award_categories ON votes.category_id=award_categories.id 
+                                    GROUP BY nominee_id
+                                    ORDER BY category_id, voteCount DESC;');
         return $query->result_array();
     }
 }

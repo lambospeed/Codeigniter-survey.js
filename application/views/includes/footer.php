@@ -141,27 +141,33 @@
 <script>
     Survey.Survey.cssType = "bootstrap";
     var surveyJSON = JSON.parse('<?php echo json_encode($surveyJSON); ?>');
-    console.log(surveyJSON);
-    function sendDataToServer(survey) {
-        //send Ajax request to your web server.
-        $.ajax({
-            url: "<?php echo site_url() ?>vote/getsurvey",
-            method: "POST",
-            data: survey.data,
-            dataType: "text",
-            success: function (data)
-            {
-                console.log(data);
-            }
-        });
-    }
-
     var survey = new Survey.Model(surveyJSON);
-    $("#surveyContainer").Survey({
-        model: survey,
-        onComplete: sendDataToServer,
-
-    });
+    survey
+        .onComplete
+        .add(function(result) {
+            //send Ajax request to your web server.
+            $.ajax({
+                url: "<?php echo site_url() ?>vote/getsurvey",
+                method: "POST",
+                data: result.data,
+                dataType: "text",
+                success: function (data)
+                {
+                    console.log(data);
+                    if (data == "voter_exist") {
+                        survey.completedHtml = "<p><h3>It looks like you have already voted.</h3></p>";
+                        survey.render();
+                        }
+                }
+            });
+        });
+    if (surveyJSON.pages.length > 0) {
+        $("#surveyContainer").Survey({
+            model: survey,
+        });
+    } else {
+        $('#surveyContainer').html('<p><h3>It looks like you have already voted.</h3></p>');
+    }
     //For Responsive
     $(document).ready(function() {
         var elements = survey.getAllQuestions();

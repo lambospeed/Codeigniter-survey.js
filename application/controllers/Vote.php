@@ -34,51 +34,73 @@ class Vote extends CI_Controller
         $categories = $this->categories_model->get_all();
         $nominees = $this->nominees_model->get_all();
         
-        //array to make survey json.
-        $arrData['name'] = 'page1';
-        $arrData['elements'] = array();
-        $arrCat = array();
-        $arrNominee = array();
-        $arrTemp = array();
+        //get client ip address.
+        $client_ip = $this->get_client_ip();
 
-        //arrange the nominees by their categories
-        foreach ($nominees as $nominee) {
-            $arrTemp[$nominee['category_id']][$nominee['id']] = $nominee;
-        }
+        //search the ip address in the voter table.
+        //if ip address is already exists, user can't vote anymore.
+        $query_ip = array(
+            'ip_address' => $client_ip
+        );
+        $exist_ip = $this->voters_model->get_by($query_ip);
+        if (!empty($exist_ip)) {
+            $data['surveyJSON'] = array('pages' => array());
+            $data['title'] = "CCA's - Place Your Vote Today!";
+            $data['description'] = 'Register and place your vote for the first annual California Cannabis Awards!';
+            $data['cononical'] = 'http://www.californiacannabisawards.com/';
+            
+            //Rendering
+            $this->load->view('includes/header', $data);
+            $this->load->view('awards/vote', $data);
+            $this->load->view('includes/footer', $data);
+        } else {
 
-        //make array by category
-        foreach ($categories as $category) {
-            $arrCat['type'] = "radiogroup";
-            $arrCat['name'] = $category['id'];
-            $arrCat['title'] = $category['name'];
-            $arrCat['isRequired'] = $category['required'] == 1? true : false;
-            $arrCat['choices'] = array();
-            $arrCat['colCount'] = 4;
-            $arrCat['hasOther'] = true;
-            foreach ($arrTemp[$category['id']] as $nominee) {
-                $arrNominee['value'] = $nominee['id'];
-                $arrNominee['text'] = $nominee['name'];
-                array_push($arrCat['choices'], $arrNominee);
+            //array to make survey json.
+            $arrData['name'] = 'page1';
+            $arrData['elements'] = array();
+            $arrCat = array();
+            $arrNominee = array();
+            $arrTemp = array();
+
+            //arrange the nominees by their categories
+            foreach ($nominees as $nominee) {
+                $arrTemp[$nominee['category_id']][$nominee['id']] = $nominee;
             }
-            array_push($arrData['elements'], $arrCat);
-        }
 
-        //make a voter user info.
-        array_push($arrData['elements'], $this->make_QuestionArray('text','voter_firstname', 'First Name', 'text'));
-        array_push($arrData['elements'], $this->make_QuestionArray('text','voter_lastname', 'Last Name', 'text'));
-        array_push($arrData['elements'], $this->make_QuestionArray('text','voter_email', 'Email', 'email'));
-        array_push($arrData['elements'], $this->make_QuestionArray('text','voter_phonenumber', 'Phone Number', 'numeric'));
-        
-        //make a final array to make survey json.
-        $data['surveyJSON'] = array('pages' => array($arrData));
-        $data['title'] = "CCA's - Place Your Vote Today!";
-        $data['description'] = 'Register and place your vote for the first annual California Cannabis Awards!';
-        $data['cononical'] = 'http://www.californiacannabisawards.com/';
-        
-        //Rendering
-        $this->load->view('includes/header', $data);
-        $this->load->view('awards/vote', $data);
-        $this->load->view('includes/footer', $data);
+            //make array by category
+            foreach ($categories as $category) {
+                $arrCat['type'] = "radiogroup";
+                $arrCat['name'] = $category['id'];
+                $arrCat['title'] = $category['name'];
+                $arrCat['isRequired'] = $category['required'] == 1? true : false;
+                $arrCat['choices'] = array();
+                $arrCat['colCount'] = 4;
+                $arrCat['hasOther'] = true;
+                foreach ($arrTemp[$category['id']] as $nominee) {
+                    $arrNominee['value'] = $nominee['id'];
+                    $arrNominee['text'] = $nominee['name'];
+                    array_push($arrCat['choices'], $arrNominee);
+                }
+                array_push($arrData['elements'], $arrCat);
+            }
+
+            //make a voter user info.
+            array_push($arrData['elements'], $this->make_QuestionArray('text','voter_firstname', 'First Name', 'text'));
+            array_push($arrData['elements'], $this->make_QuestionArray('text','voter_lastname', 'Last Name', 'text'));
+            array_push($arrData['elements'], $this->make_QuestionArray('text','voter_email', 'Email', 'email'));
+            array_push($arrData['elements'], $this->make_QuestionArray('text','voter_phonenumber', 'Phone Number', 'numeric'));
+            
+            //make a final array to make survey json.
+            $data['surveyJSON'] = array('pages' => array($arrData));
+            $data['title'] = "CCA's - Place Your Vote Today!";
+            $data['description'] = 'Register and place your vote for the first annual California Cannabis Awards!';
+            $data['cononical'] = 'http://www.californiacannabisawards.com/';
+            
+            //Rendering
+            $this->load->view('includes/header', $data);
+            $this->load->view('awards/vote', $data);
+            $this->load->view('includes/footer', $data);
+        }
     }
 
     /*
@@ -87,14 +109,26 @@ class Vote extends CI_Controller
     public function getsurvey() {
         //get all post data.
         $postData = $this->input->post();
+        //get client ip address.
+        $client_ip = $this->get_client_ip();
         //insert voter to the voters table.
         $voterData = array(
             'first_name' => $postData['voter_firstname'],
             'last_name' => $postData['voter_lastname'],
             'email' => $postData['voter_email'],
-            'phone_number' => $postData['voter_phonenumber']
+            'phone_number' => $postData['voter_phonenumber'],
+            'ip_address' => $client_ip
         );
-        $voter_id = $this->voters_model->insert($voterData);
+
+        // array to find the voter who has already exist in database.
+        $voter_email = array(
+            'email' => $postData['voter_email']
+        );
+        $voter_exist = $this->voters_model->get_by($voter_email);
+        if (!empty($voter_exist))
+            exit("voter_exist");
+        else
+            $voter_id = $this->voters_model->insert($voterData);
         
         foreach ($postData as $key => $value) {
             if (substr($key, 0, 6) == 'voter_' || substr($key, -8) == '-Comment')
@@ -182,5 +216,16 @@ class Vote extends CI_Controller
             "type" => $validation
         );
         return $arrData;
+    }
+
+    function get_client_ip() {
+        if (!empty($_SERVER['HTTP_CLIENT_IP'])) {   //check ip from share internet
+            $ip = $_SERVER['HTTP_CLIENT_IP'];
+        } elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {   //to check ip is pass from proxy
+            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else {
+            $ip = $_SERVER['REMOTE_ADDR'];
+        }
+        return $ip;
     }
 }
