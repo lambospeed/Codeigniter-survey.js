@@ -142,14 +142,25 @@
     Survey.Survey.cssType = "bootstrap";
     var surveyJSON = JSON.parse('<?php echo json_encode($surveyJSON); ?>');
     var survey = new Survey.Model(surveyJSON);
+
+    //Variables For additional page
+    var nominee_id = '<?php if (isset($nominee_id)) echo $nominee_id?>';
+    var category_id = '<?php if (isset($category_id)) echo $category_id?>';
+   
     survey
         .onComplete
         .add(function(result) {
-            //send Ajax request to your web server.
+            var jsonData = result.data;
+            
+            //Add data to the json data.------For additional page.
+            if (nominee_id.length > 0)
+                jsonData[category_id] = nominee_id;
+            
+                //send Ajax request to your web server.
             $.ajax({
                 url: "<?php echo site_url() ?>vote/getsurvey",
                 method: "POST",
-                data: result.data,
+                data: jsonData,
                 dataType: "text",
                 success: function (data)
                 {

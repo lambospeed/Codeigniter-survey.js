@@ -48,7 +48,8 @@ class Vote extends CI_Controller
             $data['title'] = "CCA's - Place Your Vote Today!";
             $data['description'] = 'Register and place your vote for the first annual California Cannabis Awards!';
             $data['cononical'] = 'http://www.californiacannabisawards.com/';
-            
+            $data['headerTitle'] = "Place Your Votes!";
+
             //Rendering
             $this->load->view('includes/header', $data);
             $this->load->view('awards/vote', $data);
@@ -94,12 +95,53 @@ class Vote extends CI_Controller
             $data['title'] = "CCA's - Place Your Vote Today!";
             $data['description'] = 'Register and place your vote for the first annual California Cannabis Awards!';
             $data['cononical'] = 'http://www.californiacannabisawards.com/';
+            $data['headerTitle'] = "Place Your Votes!";
+
+            //Rendering
+            $this->load->view('includes/header', $data);
+            $this->load->view('awards/vote', $data);
+            $this->load->view('includes/footer', $data);
+        }
+    }
+
+    /*
+    * Function: vote page for every nominees in dispensary category
+    * By this url, users can vote only for the specific nominee in dispensary
+    * @params: $nominee ---- nominee name to vote.
+    */
+    public function page($nominee) {
+
+        //Check if this nominee is the dispensary in the database.
+        $arrNominee = array(
+            'name' => urldecode($nominee)
+        );
+        $nomineeData = $this->nominees_model->get_by($arrNominee);
+        $arrData = array();
+        if (!empty($nomineeData)) {
+            //array to make survey json.
+            $arrData['name'] = 'page1';
+            $arrData['elements'] = array();
+            //make a voter user info.
+            array_push($arrData['elements'], $this->make_QuestionArray('text','voter_firstname', 'First Name', 'text'));
+            array_push($arrData['elements'], $this->make_QuestionArray('text','voter_lastname', 'Last Name', 'text'));
+            array_push($arrData['elements'], $this->make_QuestionArray('text','voter_email', 'Email', 'email'));
+            array_push($arrData['elements'], $this->make_QuestionArray('text','voter_phonenumber', 'Phone Number', 'numeric'));
+            //make a final array to make survey json.
+            $data['surveyJSON'] = array('pages' => array($arrData));
+            
+            $data['title'] = "CCA's - Place Your Vote Today!";
+            $data['description'] = 'Register and place your vote for the first annual California Cannabis Awards!';
+            $data['cononical'] = 'http://www.californiacannabisawards.com/';
+            $data['headerTitle'] = $nomineeData['name'];
+            $data['nominee_id'] = $nomineeData['id'];
+            $data['category_id'] = $nomineeData['category_id'];
             
             //Rendering
             $this->load->view('includes/header', $data);
             $this->load->view('awards/vote', $data);
             $this->load->view('includes/footer', $data);
         }
+            
     }
 
     /*
@@ -137,9 +179,11 @@ class Vote extends CI_Controller
                     'name' => $postData[$key . '-Comment'],
                     'category_id' => $key
                 );
-                $nominee_id = $this->nominees_model->get_by($nomineeData);
-                if (is_null($nominee_id))
+                $nominee_exist = $this->nominees_model->get_by($nomineeData);
+                if (empty($nominee_exist))
                     $nominee_id = $this->nominees_model->insert($nomineeData);
+                else
+                    $nominee_id = $nominee_exist['id'];
                 $voteData = array(
                     'voter_id' => $voter_id,
                     'category_id' => $key,

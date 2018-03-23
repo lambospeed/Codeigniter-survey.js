@@ -3,7 +3,7 @@
     <div class="container">
         <div class="loader"></div>
         <div class="section-header text-center">
-            <h2>Place Your Votes!</h2>
+            <h2><?php echo $headerTitle; ?></h2>
         </div>
         <div id="surveyContainer"></div>
         <ul class="about-button">
