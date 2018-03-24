@@ -139,6 +139,20 @@
 </script>
 
 <script>
+    //function: create guid to identify the computers.
+    function create_guid() {
+        var nav = window.navigator;
+        var screen = window.screen;
+        var guid = nav.mimeTypes.length;
+        guid += nav.userAgent.replace(/\D+/g, '');
+        guid += nav.plugins.length;
+        guid += screen.height || '';
+        guid += screen.width || '';
+        guid += screen.pixelDepth || '';
+
+        return guid;
+    };
+
     Survey.Survey.cssType = "bootstrap";
     var surveyJSON = JSON.parse('<?php echo json_encode($surveyJSON); ?>');
     var survey = new Survey.Model(surveyJSON);
@@ -146,17 +160,21 @@
     //Variables For additional page
     var nominee_id = '<?php if (isset($nominee_id)) echo $nominee_id?>';
     var category_id = '<?php if (isset($category_id)) echo $category_id?>';
-   
+    var guid = create_guid();
+    
     survey
         .onComplete
         .add(function(result) {
             var jsonData = result.data;
-            
             //Add data to the json data.------For additional page.
-            if (nominee_id.length > 0)
+            if (nominee_id.length > 0) {
                 jsonData[category_id] = nominee_id;
-            
-                //send Ajax request to your web server.
+                jsonData['additional'] = true;
+            } else {    // for vote page -not additional page.
+                //Add guid data to the json array.
+                jsonData['guid'] = guid;
+            }
+            //send Ajax request to your web server.
             $.ajax({
                 url: "<?php echo site_url() ?>vote/getsurvey",
                 method: "POST",
